@@ -1,7 +1,8 @@
 package site.stellarburgers.User;
 
-import site.stellarburgers.RestClient;
+import io.qameta.allure.Step;
 import io.restassured.response.ValidatableResponse;
+import site.stellarburgers.RestClient;
 
 import static io.restassured.RestAssured.given;
 
@@ -11,7 +12,9 @@ public class UserClient extends RestClient {
     private static final String USER_LOGOUT = "api/auth/logout";
     private static final String USER_DELETE = "api/auth/user";
     private static final String USER_DATA = "api/auth/user";
-    public ValidatableResponse create(User user){
+
+    @Step("Создание пользователя")
+    public ValidatableResponse create(User user) {
         return given()
                 .spec(getBaseSpec())
                 .body(user)
@@ -19,7 +22,9 @@ public class UserClient extends RestClient {
                 .post(USER_CREATE)
                 .then();
     }
-    public ValidatableResponse login(UserCredentials credentials){
+
+    @Step("Логин пользователя")
+    public ValidatableResponse login(UserCredentials credentials) {
         return given()
                 .spec(getBaseSpec())
                 .body(credentials)
@@ -27,7 +32,9 @@ public class UserClient extends RestClient {
                 .post(USER_LOGIN)
                 .then();
     }
-    public ValidatableResponse logout(RefreshToken refreshToken){
+
+    @Step("Выход из личного кабинета")
+    public ValidatableResponse logout(RefreshToken refreshToken) {
         return given()
                 .spec(getBaseSpec())
                 .body(refreshToken)
@@ -35,7 +42,9 @@ public class UserClient extends RestClient {
                 .post(USER_LOGOUT)
                 .then();
     }
-    public ValidatableResponse getUserData(String accessToken){
+
+    @Step("Получить данные пользователя")
+    public ValidatableResponse getUserData(String accessToken) {
         return given()
                 .spec(getBaseSpec())
                 .header("Authorization", "Bearer" + accessToken)
@@ -43,7 +52,9 @@ public class UserClient extends RestClient {
                 .get(USER_DATA)
                 .then();
     }
-    public ValidatableResponse changeUserData(String accessToken, User user){
+
+    @Step("Изменение данных пользователя")
+    public ValidatableResponse changeUserData(String accessToken, User user) {
         return given()
                 .spec(getBaseSpec())
                 .header("Authorization", "Bearer" + accessToken)
@@ -53,7 +64,8 @@ public class UserClient extends RestClient {
                 .then();
     }
 
-    public ValidatableResponse delete(String accessToken){
+    @Step("Удаление пользователя")
+    public ValidatableResponse delete(String accessToken) {
         return given()
                 .spec(getBaseSpec())
                 .header("Authorization", "Bearer" + accessToken)

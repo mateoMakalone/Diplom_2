@@ -13,58 +13,61 @@ import site.stellarburgers.User.User;
 import site.stellarburgers.User.UserClient;
 import site.stellarburgers.User.UserCredentials;
 import site.stellarburgers.User.UserGenerator;
+
 @RunWith(Parameterized.class)
 public class ChangeUserDataTest {
+    private static User changedUser;
     private UserClient userClient;
     private User user;
-    private static User changedUser;
     private String accessToken;
-    @Before
-    public void setUp(){
-        userClient = new UserClient();
-        user = UserGenerator.getUserData();
+
+    public ChangeUserDataTest(User changedUser) {
+        ChangeUserDataTest.changedUser = changedUser;
     }
-    public ChangeUserDataTest(User changedUser){
-        this.changedUser = changedUser;
-    }
-    @Parameterized.Parameters
-    public static Object[][] getData(){
-        return new Object[][] {
+
+    @Parameterized.Parameters(name = "{index} : UserChangedData = {0}")
+    public static Object[][] getData() {
+        return new Object[][]{
                 {changedUser = UserGenerator.updateUserName()},
                 {changedUser = UserGenerator.updateUserEmail()},
                 {changedUser = UserGenerator.updateUserPassword()}
         };
     }
+
+    @Before
+    public void setUp() {
+        userClient = new UserClient();
+        user = UserGenerator.getUserData();
+    }
+
     @Test
     @DisplayName("Изменение данных пользователя с авторизацией")
     @Description("Код ответа 200, тело ответа success true")
-    public void changeUserDataWithAuth(){
+    public void changeUserDataWithAuth() {
         ValidatableResponse create = userClient.create(user);
-        create.statusCode(200);
         accessToken = create.extract().path("accessToken");
-        ValidatableResponse login = userClient.login(UserCredentials.from(user));
-        login.statusCode(200);
-        ValidatableResponse renameUser = userClient.changeUserData(accessToken,changedUser);
-        renameUser.log().all().body("success", Matchers.equalTo(true))
+        userClient.login(UserCredentials.from(user));
+        ValidatableResponse renameUser = userClient.changeUserData(accessToken, changedUser);
+        renameUser.statusCode(200)
                 .and()
-                .statusCode(200);
+                .log().all().body("success", Matchers.equalTo(true));
     }
+
     @Test
     @DisplayName("Изменение данных пользователя без авторизации")
     @Description("Код ответа 401, тело отвера success false")
-    public void changeUserDataWithoutAuth(){
+    public void changeUserDataWithoutAuth() {
         ValidatableResponse create = userClient.create(user);
-        create.log().all();
         accessToken = create.extract().path("accessToken");
-        ValidatableResponse login = userClient.login(UserCredentials.from(user));
-        login.statusCode(200);
-        ValidatableResponse renameUser = userClient.changeUserData(null,changedUser);
-        renameUser.log().all().body("success", Matchers.equalTo(false))
+        userClient.login(UserCredentials.from(user));
+        ValidatableResponse renameUser = userClient.changeUserData(null, changedUser);
+        renameUser.statusCode(401)
                 .and()
-                .statusCode(401);
+                .log().all().body("success", Matchers.equalTo(false));
     }
+
     @After
-    public void cleanUp(){
+    public void cleanUp() {
         userClient.delete(accessToken);
     }
 

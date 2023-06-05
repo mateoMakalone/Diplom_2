@@ -15,40 +15,43 @@ import site.stellarburgers.User.UserCredentials;
 
 @RunWith(Parameterized.class)
 public class LoginWithIncorrectDataTest {
-    private UserClient userClient;
     private static User user;
+    private UserClient userClient;
     private User correctUser;
     private String accessToken;
+
+    public LoginWithIncorrectDataTest(User user) {
+        LoginWithIncorrectDataTest.user = user;
+    }
+
+    @Parameterized.Parameters(name = "{index} : incorrectFieldUser = {0}")
+    public static Object[][] getData() {
+        return new Object[][]{
+                {user = new User("BorisTheBlad@yandex.ru", "TheBullet-Dodger", "Boris")},
+                {user = new User("BorisTheBlade@yandex.ru", "TheBulletDodger", "Boris")}
+        };
+    }
+
     @Before
-    public void setUp(){
+    public void setUp() {
         userClient = new UserClient();
         correctUser = new User("BorisTheBlade@yandex.ru", "TheBullet-Dodger", "Boris");
     }
-    public LoginWithIncorrectDataTest(User user){
-        this.user = user;
-    }
-    @Parameterized.Parameters
-    public static Object[][] getData(){
-            return new Object[][]{
-                    {user = new User("BorisTheBlad@yandex.ru", "TheBullet-Dodger", "Boris")},
-                    {user = new User("BorisTheBlade@yandex.ru", "TheBulletDodger", "Boris")}
-            };
-    }
+
     @Test
     @DisplayName("Пользователь не может авторизоваться с некорректными данными")
     @Description("Код ответа 401, тело ответа email or password are incorrect")
-    public void userCantLoginWithIncorrectData(){
+    public void userCantLoginWithIncorrectData() {
         ValidatableResponse createResponse = userClient.create(correctUser);
-        createResponse.statusCode(200);
         accessToken = createResponse.extract().path("accessToken");
         ValidatableResponse loginResponse = userClient.login(UserCredentials.from(user));
-        loginResponse.log().all().body("message", Matchers.equalTo("email or password are incorrect"))
+        loginResponse.statusCode(401)
                 .and()
-                .statusCode(401);
+                .log().all().body("message", Matchers.equalTo("email or password are incorrect"));
     }
 
     @After
-    public void cleanUp(){
-    userClient.delete(accessToken);
+    public void cleanUp() {
+        userClient.delete(accessToken);
     }
 }

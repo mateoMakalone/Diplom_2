@@ -23,8 +23,9 @@ public class OrderCreateTest {
     private OrderClient orderClient;
     private Order emptyOrder;
     private Order incorrectOrder;
+
     @Before
-    public void setUp(){
+    public void setUp() {
         user = UserGenerator.getUserData();
         userClient = new UserClient();
         order = OrderGenerator.getOrderData();
@@ -32,50 +33,51 @@ public class OrderCreateTest {
         emptyOrder = OrderGenerator.emptyOrderList();
         incorrectOrder = OrderGenerator.orderWithIncorrectHash();
     }
+
     @Test
     @DisplayName("Создание заказа с авторизацией")
     @Description("Код ответа 200, тело ответа success true")
-    public void createOrderWithAuth(){
+    public void createOrderWithAuth() {
         ValidatableResponse createUser = userClient.create(user);
-        createUser.statusCode(200);
         accessToken = createUser.extract().path("accessToken");
-        ValidatableResponse login = userClient.login(UserCredentials.from(user));
-        login.statusCode(200);
+        userClient.login(UserCredentials.from(user));
         ValidatableResponse createOrder = orderClient.createOrder(order, accessToken);
-        createOrder.log().all().body("success", Matchers.equalTo(true))
+        createOrder.statusCode(200)
                 .and()
-                .statusCode(200);
+                .log().all().body("success", Matchers.equalTo(true));
     }
+
     @Test
     @DisplayName("Создание заказа без авторизации")
     @Description("Код ответа 200, тело ответа success true")
-    public void createOrderWithoutAuth(){
+    public void createOrderWithoutAuth() {
         ValidatableResponse createOrder = orderClient.createOrder(order, null);
-        createOrder.log().all().body("success", Matchers.equalTo(true))
+        createOrder.statusCode(200)
                 .and()
-                .statusCode(200);
+                .log().all().body("success", Matchers.equalTo(true));
     }
+
     @Test
     @DisplayName("Создание заказа с пустым списком ингредиентов")
     @Description("Код ответа 400, ошибка в теле ответа Ingredient ids must be provided")
-    public void createOrderWithEmptyIngredientList(){
+    public void createOrderWithEmptyIngredientList() {
         ValidatableResponse createUser = userClient.create(user);
-        createUser.statusCode(200);
         accessToken = createUser.extract().path("accessToken");
-        ValidatableResponse login = userClient.login(UserCredentials.from(user));
-        login.statusCode(200);
+        userClient.login(UserCredentials.from(user));
         ValidatableResponse createOrder = orderClient.createOrder(emptyOrder, accessToken);
-        createOrder.log().all().body("message", Matchers.equalTo("Ingredient ids must be provided"))
+        createOrder.statusCode(400)
                 .and()
-                .statusCode(400);
+                .log().all().body("message", Matchers.equalTo("Ingredient ids must be provided"));
     }
+
     @Test
     @DisplayName("Создание заказа с некорректным хэшем ингредиентов")
     @Description("Кот ответа 500")
-    public void createOrderWithIncorrectIngredientHash(){
+    public void createOrderWithIncorrectIngredientHash() {
         ValidatableResponse createOrder = orderClient.createOrder(incorrectOrder, null);
         createOrder.statusCode(500);
     }
+
     @After
     public void cleanUp() {
         userClient.delete(accessToken);

@@ -16,37 +16,42 @@ import site.stellarburgers.User.UserGenerator;
 @RunWith(Parameterized.class)
 public class CreateUserWithoutRequierFieldTest {
 
-    private UserClient userClient;
     private static User user;
+    private UserClient userClient;
     private String accessToken;
-    @Before
-    public void setUp(){
-    user = new User();
-    userClient = new UserClient();
+
+    public CreateUserWithoutRequierFieldTest(User user) {
+        CreateUserWithoutRequierFieldTest.user = user;
     }
-    public CreateUserWithoutRequierFieldTest(User user){
-        this.user = user;
-    }
-    @Parameterized.Parameters
-    public static Object[][] getData(){
+
+    @Parameterized.Parameters(name = "{index} : User = {0}")
+    public static Object[][] getData() {
         return new Object[][]{
                 {user = UserGenerator.getUserWithoutEmail()},
                 {user = UserGenerator.getUserWithoutPassword()},
                 {user = UserGenerator.getUserWithoutName()},
         };
     }
+
+    @Before
+    public void setUp() {
+        user = new User();
+        userClient = new UserClient();
+    }
+
     @Test
     @DisplayName("Невозможно создать пользователя без обязательных полей")
     @Description("Код ответа: 403")
-    public void createUserWithoutRequierField(){
+    public void createUserWithoutRequierField() {
         ValidatableResponse createResponse = userClient.create(user);
         accessToken = createResponse.extract().path("accessToken");
-        createResponse.log().all().body("success", Matchers.equalTo(false))
+        createResponse.statusCode(403)
                 .and()
-                .statusCode(403);
-        }
-        @After
-    public void cleanUp(){
-        userClient.delete(accessToken);
-        }
+                .log().all().body("success", Matchers.equalTo(false));
     }
+
+    @After
+    public void cleanUp() {
+        userClient.delete(accessToken);
+    }
+}

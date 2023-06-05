@@ -1,5 +1,6 @@
 package site.stellarburgers.Order;
 
+import io.qameta.allure.Step;
 import io.restassured.response.ValidatableResponse;
 import site.stellarburgers.RestClient;
 
@@ -9,7 +10,8 @@ public class OrderClient extends RestClient {
     private static final String GET_ORDER_LIST = "api/orders";
     private static final String CREATE_ORDER = "api/orders";
 
-    public ValidatableResponse createOrder(Order order, String accessToken){
+    @Step("Создание заказа")
+    public ValidatableResponse createOrder(Order order, String accessToken) {
         return given()
                 .spec(getBaseSpec())
                 .header("Authorization", "Bearer" + accessToken)
@@ -18,7 +20,9 @@ public class OrderClient extends RestClient {
                 .post(CREATE_ORDER)
                 .then();
     }
-    public ValidatableResponse getOrderList(String accessToken){
+
+    @Step("Получить список заказов авторизованного пользователя")
+    public ValidatableResponse getOrderList(String accessToken) {
         return given()
                 .spec(getBaseSpec())
                 .header("Authorization", "Bearer" + accessToken)

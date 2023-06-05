@@ -14,8 +14,6 @@ import site.stellarburgers.User.User;
 import site.stellarburgers.User.UserClient;
 import site.stellarburgers.User.UserGenerator;
 
-import java.util.ArrayList;
-
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 
@@ -25,43 +23,44 @@ public class getUserOrderListTest {
     private Order order;
     private String accessToken;
     private OrderClient orderClient;
+
     @Before
-    public void setUp(){
+    public void setUp() {
         userClient = new UserClient();
         user = UserGenerator.getUserData();
         order = OrderGenerator.getOrderData();
         orderClient = new OrderClient();
     }
+
     @Test
     @DisplayName("Получение заказов авторизованного пользователя")
     @Description("Код ответа 200, поле owner отсутствует")
-    public void getUserOrderWithAuth(){
+    public void getUserOrderWithAuth() {
         ValidatableResponse create = userClient.create(user);
-        create.statusCode(200);
         accessToken = create.extract().path("accessToken");
-        ValidatableResponse orderCreate = orderClient.createOrder(order, accessToken);
-        orderCreate.statusCode(200);
+        orderClient.createOrder(order, accessToken);
         ValidatableResponse getOrderList = orderClient.getOrderList(accessToken);
-        getOrderList.assertThat().body("owner", nullValue())
+        getOrderList.statusCode(200)
                 .and()
-                .statusCode(200);
+                .assertThat().body("owner", nullValue());
     }
+
     @Test
     @DisplayName("Невозможно получить список заказов пользователя без авторизации")
     @Description("Код ответа 401, ошибка в теле ответа You should be authorised")
-    public void getUserOrderWithoutAuth(){
+    public void getUserOrderWithoutAuth() {
         ValidatableResponse create = userClient.create(user);
-        create.statusCode(200);
         accessToken = create.extract().path("accessToken");
         ValidatableResponse orderCreate = orderClient.createOrder(order, accessToken);
-        orderCreate.assertThat().body("order",  notNullValue());
+        orderCreate.assertThat().body("order", notNullValue());
         ValidatableResponse getOrderList = orderClient.getOrderList(null);
-        getOrderList.log().all().body("message", Matchers.equalTo("You should be authorised"))
+        getOrderList.statusCode(401)
                 .and()
-                .statusCode(401);
+                .log().all().body("message", Matchers.equalTo("You should be authorised"));
     }
+
     @After
-    public void cleanUp(){
+    public void cleanUp() {
         userClient.delete(accessToken);
     }
 }
